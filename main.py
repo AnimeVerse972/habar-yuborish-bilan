@@ -88,8 +88,9 @@ async def admin_handler(message: types.Message):
             KeyboardButton("\u274c Kodni o\u2018chirish"), KeyboardButton("\ud83d\udcca Statistika")
         )
         markup.add(
-            KeyboardButton("\ud83d\udc64 Admin qo\u2018shish"), KeyboardButton("\ud83d\udd19 Orqaga")
+            KeyboardButton("\ud83d\udc64 Admin qo\u2018shish"), KeyboardButton("\ud83d\udd8a Xabar yuborish")
         )
+        markup.add(KeyboardButton("\ud83d\udd19 Orqaga"))
         await message.answer("\ud83d\udc6e\u200d\u2642\ufe0f Admin paneliga xush kelibsiz!", reply_markup=markup)
     else:
         await message.answer("\u26d4 Siz admin emassiz!")
@@ -176,6 +177,27 @@ async def add_admin_handler(message: types.Message, state: FSMContext):
             await message.answer("\u26a0\ufe0f Bu foydalanuvchi allaqachon admin.")
     else:
         await message.answer("\u274c Noto\u2018g\u2018ri ID!")
+    await state.finish()
+
+@dp.message_handler(lambda m: m.text == "\ud83d\udd8a Xabar yuborish")
+async def start_broadcast(message: types.Message):
+    if not is_user_admin(message.from_user.id):
+        return await message.answer("\u26d4 Siz admin emassiz!")
+    await message.answer("\ud83d\udd8a Yuboriladigan xabar matnini kiriting:")
+    await AdminStates.waiting_for_broadcast.set()
+
+@dp.message_handler(state=AdminStates.waiting_for_broadcast)
+async def broadcast_message_handler(message: types.Message, state: FSMContext):
+    text = message.text
+    users = users_collection.find()
+    count = 0
+    for user in users:
+        try:
+            await bot.send_message(chat_id=user["user_id"], text=text)
+            count += 1
+        except Exception as e:
+            print(f"Xabar yuborilmadi: {user['user_id']} => {e}")
+    await message.answer(f"\u2705 Xabar yuborildi: {count} ta foydalanuvchiga")
     await state.finish()
 
 @dp.message_handler(lambda msg: msg.text.strip().isdigit())
