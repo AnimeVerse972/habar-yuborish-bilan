@@ -31,6 +31,7 @@ class AdminStates(StatesGroup):
     waiting_for_code = State()
     waiting_for_remove = State()
     waiting_for_admin_id = State()
+    waiting_for_broadcast = State()
 
 def is_user_admin(user_id):
     return user_id in ADMINS
